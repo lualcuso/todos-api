@@ -7,7 +7,6 @@ const cors = require("cors");
 
 const { User, Task } = require("./models");
 const authentication = require("./middleware/authentication");
-const { where } = require("sequelize");
 
 const app = express();
 const port = 3000;
