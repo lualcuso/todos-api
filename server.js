@@ -74,6 +74,33 @@ app.post("/forgot-password", async (req, res) => {
   });
 });
 
+app.post("/reset-password", async (req, res) => {
+  const { email, password, token } = req.body;
+
+  const user = await User.findOne({ where: { email: email } });
+
+  const sameToken = token === user.resetToken;
+
+  if (!user || !sameToken) {
+    return res
+      .status(401)
+      .json({ message: "The information provided is incorrect" });
+  }
+
+  user.password = await bcrypt.hash(password, 10);
+  await user.save();
+
+  await sendEmail(
+    user.email,
+    "Password Reset Successfully",
+    "Your password has been reset successfully."
+  );
+
+  res.status(200).json({
+    message: "Password reset successfully.",
+  });
+});
+
 app.get("/todos", authentication, async (req, res) => {
   const { userId } = req.query;
   const tasks = await Task.findAll({ where: { userId } });
