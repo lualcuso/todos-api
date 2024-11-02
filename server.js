@@ -7,6 +7,7 @@ const cors = require("cors");
 
 const { User, Task } = require("./models");
 const authentication = require("./middleware/authentication");
+const sendEmail = require("./middleware/email");
 
 const app = express();
 const port = 3000;
@@ -43,8 +44,33 @@ app.post("/login", async (req, res) => {
   let access_token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
 
   res.status(200).json({
-    message: "Signin successful",
+    message: "Log in successful",
     user: { email: user.email, token: access_token },
+  });
+});
+
+app.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ where: { email: email } });
+
+  if (!user) {
+    return res.status(404).json({ message: "This account does not exist" });
+  }
+
+  const token = `${Math.floor(100000 + Math.random() * 900000)}`;
+
+  user.resetToken = token;
+  await user.save();
+
+  await sendEmail(
+    user.email,
+    "Reset Password Token",
+    `Use the following token ${token} to reset your password.`
+  );
+
+  res.status(200).json({
+    message: "Email sent successful",
   });
 });
 
