@@ -8,6 +8,7 @@ const cors = require("cors");
 const { User, Task } = require("./models");
 const authentication = require("./middleware/authentication");
 const sendEmail = require("./middleware/email");
+const { where } = require("sequelize");
 
 const app = express();
 const port = 3000;
@@ -98,6 +99,22 @@ app.post("/reset-password", async (req, res) => {
 
   res.status(200).json({
     message: "Password reset successfully.",
+  });
+});
+
+app.get("/me", authentication, async (req, res) => {
+  const token = req.headers.authorization.split(" ")[1];
+
+  const { id } = jwt.verify(token, process.env.JWT_SECRET);
+
+  const user = await User.findOne({
+    attributes: ["id", "email", "name"],
+    where: { id: id },
+  });
+
+  res.status(200).json({
+    message: "User fetched successfully",
+    user,
   });
 });
 
